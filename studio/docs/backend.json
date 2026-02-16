@@ -1,0 +1,273 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "createdAt"
+      ]
+    },
+    "Document": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Document",
+      "type": "object",
+      "description": "Represents a document uploaded by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the document."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Document)"
+        },
+        "fileName": {
+          "type": "string",
+          "description": "The original file name of the uploaded document."
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "Timestamp indicating when the document was uploaded.",
+          "format": "date-time"
+        },
+        "fileType": {
+          "type": "string",
+          "description": "The type of the document (e.g., PDF, DOCX)."
+        },
+        "fileSize": {
+          "type": "number",
+          "description": "The size of the document in bytes."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "fileName",
+        "uploadDate",
+        "fileType",
+        "fileSize"
+      ]
+    },
+    "Summary": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Summary",
+      "type": "object",
+      "description": "Represents a summary generated for a document.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the summary."
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who generated the summary."
+        },
+        "documentId": {
+          "type": "string",
+          "description": "Reference to Document."
+        },
+        "documentName": {
+          "type": "string",
+          "description": "The name of the document that was summarized."
+        },
+        "audience": {
+          "type": "string",
+          "description": "The target audience for the summary (e.g., Student, Lawyer)."
+        },
+        "summaryText": {
+          "type": "string",
+          "description": "The actual text of the generated summary."
+        },
+        "generationDate": {
+          "type": "string",
+          "description": "Timestamp indicating when the summary was generated.",
+          "format": "date-time"
+        },
+        "citations": {
+          "type": "array",
+          "description": "Citation references for the summary.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "number"
+              },
+              "paragraph": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "documentId",
+        "documentName",
+        "audience",
+        "summaryText",
+        "generationDate"
+      ]
+    },
+    "ChatMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatMessage",
+      "type": "object",
+      "description": "Represents a chat message exchanged between the user and the document.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the chat message."
+        },
+        "documentId": {
+          "type": "string",
+          "description": "Reference to Document. (Relationship: Document 1:N ChatMessage)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N ChatMessage)"
+        },
+        "message": {
+          "type": "string",
+          "description": "The text content of the chat message."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating when the message was sent.",
+          "format": "date-time"
+        },
+        "isUserMessage": {
+          "type": "boolean",
+          "description": "Indicates whether the message was sent by the user (true) or the system (false)."
+        }
+      },
+      "required": [
+        "id",
+        "documentId",
+        "userId",
+        "message",
+        "timestamp",
+        "isUserMessage"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Path-based ownership ensures only the user can access their own profile data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/documents/{documentId}",
+        "definition": {
+          "entityName": "Document",
+          "schema": {
+            "$ref": "#/backend/entities/Document"
+          },
+          "description": "Stores documents uploaded by the user. Path-based ownership ensures that documents are only accessible to the owning user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "documentId",
+              "description": "The unique identifier of the document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/documents/{documentId}/summaries/{summaryId}",
+        "definition": {
+          "entityName": "Summary",
+          "schema": {
+            "$ref": "#/backend/entities/Summary"
+          },
+          "description": "Stores summaries generated for a specific document. Inherits ownership from the parent document.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "documentId",
+              "description": "The unique identifier of the document."
+            },
+            {
+              "name": "summaryId",
+              "description": "The unique identifier of the summary."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/documents/{documentId}/chat_messages/{chatMessageId}",
+        "definition": {
+          "entityName": "ChatMessage",
+          "schema": {
+            "$ref": "#/backend/entities/ChatMessage"
+          },
+          "description": "Stores chat messages associated with a specific document. Inherits ownership from the parent document.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "documentId",
+              "description": "The unique identifier of the document."
+            },
+            {
+              "name": "chatMessageId",
+              "description": "The unique identifier of the chat message."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data is stored under `/users/{userId}`, providing path-based ownership. Documents, summaries, and chat messages are nested under the user's document path to maintain this ownership and simplify security rules.\n\n**Authorization Independence**: The structure avoids `get()` calls in security rules by storing all data relevant to a user directly under their path, such as `/users/{userId}/documents/{documentId}`. This allows creating robust security rules based solely on the request's authentication context (`request.auth.uid`) and the path without needing to fetch data from other documents.\n\n**QAPs (Rules are not Filters)**: List operations are secured using path-based ownership. For example, listing documents is done under `/users/{userId}/documents`. This structure allows rules to efficiently check `request.auth.uid == userId` to ensure users can only access their own documents.\n\n**Data Segregation**: All documents within a collection share the same security requirements. Private user data is stored under `/users/{userId}`, while collaborative data (if any) would be stored in separate collections with appropriate membership models. This segregation simplifies the rules and enhances security.\n\n**Invariants**: The design ensures the integrity of ownership by using the `/users/{userId}` path as the root for user-owned data. Timestamps and any denormalized data can be easily validated using security rules."
+  }
+}

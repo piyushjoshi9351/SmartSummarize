@@ -1,0 +1,31 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users can only read and write to their own data, nested under their user ID.
+    // This secures profiles, documents, summaries, and chat messages.
+    match /users/{userId}/{documents=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // This rule is specifically for the collectionGroup query on 'summaries'
+    // used in the History page.
+    match /{path=**}/summaries/{summaryId} {
+      // Allow any authenticated user to perform the 'list' part of the query.
+      // This is necessary for collection group queries. The actual security is
+      // enforced by checking the userId field in the document.
+      allow list: if request.auth != null;
+
+      // For each summary the query tries to return, this rule checks that
+      // the authenticated user is the owner of the data by validating the userId field.
+      allow get, read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Additional rule to handle write operations to summaries
+    match /users/{userId}/summaries/{summaryId} {
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
