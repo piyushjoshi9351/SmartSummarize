@@ -11,6 +11,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {compareDocumentsLocal} from '@/ai/local-heuristics';
+import {shouldUseGeminiPrimary} from '@/ai/provider';
 
 const CompareDocumentsInputSchema = z.object({
   documentOneText: z.string().describe('The text content of the first document.'),
@@ -27,8 +29,52 @@ const CompareDocumentsOutputSchema = z.object({
 });
 export type CompareDocumentsOutput = z.infer<typeof CompareDocumentsOutputSchema>;
 
+async function compareDocumentsViaAPI(input: CompareDocumentsInput): Promise<CompareDocumentsOutput> {
+  try {
+    const response = await fetch('http://localhost:5000/api/compare-documents', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        documentOneText: input.documentOneText,
+        documentTwoText: input.documentTwoText,
+        documentOneName: input.documentOneName,
+        documentTwoName: input.documentTwoName,
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn(`⚠️  Comparison API failed (${response.status}), using fallback`);
+      return compareDocumentsLocal(
+        input.documentOneText,
+        input.documentTwoText,
+        input.documentOneName,
+        input.documentTwoName
+      );
+    }
+
+    const data = await response.json();
+    return {
+      similarities: data.similarities || [],
+      differences: data.differences || [],
+      conclusion: data.conclusion || "Comparison could not be completed.",
+    };
+  } catch (error) {
+    console.warn(`⚠️  Comparison API error: ${error}, using fallback`);
+    return compareDocumentsLocal(
+      input.documentOneText,
+      input.documentTwoText,
+      input.documentOneName,
+      input.documentTwoName
+    );
+  }
+}
+
 export async function compareDocuments(input: CompareDocumentsInput): Promise<CompareDocumentsOutput> {
-  return compareDocumentsFlow(input);
+  if (shouldUseGeminiPrimary('compare')) {
+    return compareDocumentsFlow(input);
+  }
+
+  return compareDocumentsViaAPI(input);
 }
 
 const prompt = ai.definePrompt({

@@ -11,6 +11,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { buildSuggestedQuestions } from '@/ai/local-heuristics';
+import { shouldUseGeminiPrimary } from '@/ai/provider';
 
 const GenerateSuggestedQuestionsInputSchema = z.object({
   documentText: z.string().describe('The text content of the document.'),
@@ -31,7 +33,11 @@ export type GenerateSuggestedQuestionsOutput = z.infer<
 export async function generateSuggestedQuestions(
   input: GenerateSuggestedQuestionsInput
 ): Promise<GenerateSuggestedQuestionsOutput> {
-  return generateSuggestedQuestionsFlow(input);
+  if (shouldUseGeminiPrimary('suggestedQuestions')) {
+    return generateSuggestedQuestionsFlow(input);
+  }
+
+  return { questions: buildSuggestedQuestions(input.documentText) };
 }
 
 const prompt = ai.definePrompt({

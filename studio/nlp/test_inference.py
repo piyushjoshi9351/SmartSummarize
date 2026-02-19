@@ -19,7 +19,7 @@ def test_inference_server():
     # Test 1: Health check
     print("\n[1/3] Testing Health Check...")
     try:
-        response = requests.get(f"{BASE_URL}/api/health", timeout=5)
+        response = requests.get(f"{BASE_URL}/health", timeout=5)
         if response.status_code == 200:
             print("✓ Health check passed")
             print(f"  Response: {response.json()}")
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     print("Waiting for server to be ready...")
     for i in range(30):
         try:
-            requests.get(f"{BASE_URL}/api/health", timeout=1)
+            requests.get(f"{BASE_URL}/health", timeout=1)
             print("✓ Server is ready!")
             break
         except:

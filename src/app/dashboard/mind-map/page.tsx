@@ -87,26 +87,28 @@ export default function MindMapPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Mind Map</h1>
-        <p className="text-muted-foreground">
-          Visualize the key concepts and connections in your documents.
+    <div className="space-y-12">
+      <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
+        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-green-500 to-primary bg-clip-text text-transparent">
+          🧠 Mind Map
+        </h1>
+        <p className="text-muted-foreground text-lg max-w-2xl">
+          Visualize the key concepts, ideas, and connections within your documents in a beautiful interactive map.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Generate a Mind Map</CardTitle>
-          <CardDescription>
-            Select one of your uploaded documents to visualize its structure.
+      <Card className="border-primary/20 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
+        <CardHeader className="bg-gradient-to-r from-green-500/5 to-primary/5 border-b border-primary/10">
+          <CardTitle className="text-2xl">✨ Generate a Mind Map</CardTitle>
+          <CardDescription className="text-sm mt-1">
+            Select a document to create an interactive visual map of its key concepts.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoadingDocs ? (
-            <div className="flex items-center space-x-2">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span>Loading documents...</span>
+            <div className="flex items-center space-x-3 animate-in fade-in">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-muted-foreground">Loading your documents...</span>
             </div>
           ) : documents && documents.length > 0 ? (
             <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -140,11 +142,15 @@ export default function MindMapPage() {
       </Card>
       
       {loading && (
-        <Card>
-            <CardContent className="pt-6">
+        <Card className="border-primary/20 shadow-lg animate-in fade-in duration-500" style={{ animationDelay: "100ms" }}>
+            <CardContent className="pt-8">
                 <div className="flex flex-col items-center justify-center space-y-4 py-16">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Generating your mind map... this may take a moment.</p>
+                    <div className="relative">
+                      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    </div>
+                    <p className="text-muted-foreground text-center text-sm">
+                      🧠 Generating your mind map... visualizing the concepts and connections. This may take a moment.
+                    </p>
                 </div>
             </CardContent>
         </Card>
@@ -153,11 +159,11 @@ export default function MindMapPage() {
       {mindMapData && !loading && <MindMapDisplay mindMapData={mindMapData} />}
 
       {!mindMapData && !loading && (
-         <div className="text-center py-16 border-2 border-dashed rounded-lg">
-            <Share2 className="mx-auto h-12 w-12 text-muted-foreground" />
+         <div className="text-center py-16 border-2 border-dashed rounded-xl border-green-500/20 bg-gradient-to-br from-green-500/5 to-primary/5 animate-in fade-in duration-500" style={{ animationDelay: "200ms" }}>
+            <Share2 className="mx-auto h-12 w-12 text-muted-foreground/50" />
             <h3 className="text-lg font-semibold mt-4">Your mind map will appear here</h3>
-            <p className="text-muted-foreground mt-2">
-                Select a document and click "Generate" to start.
+            <p className="text-muted-foreground mt-2 text-sm">
+                Select a document above and click "Generate" to create your visual concept map.
             </p>
         </div>
       )}

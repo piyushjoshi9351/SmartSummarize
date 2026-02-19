@@ -151,11 +151,11 @@ export function SummaryView({ document }: { document: DocumentData }) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Generate AI Summary</CardTitle>
-        <CardDescription>
-          Select an audience and language to tailor the summary.
+    <Card className="border-primary/20 shadow-lg shadow-primary/10 animate-in fade-in duration-500">
+      <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 border-b border-primary/10">
+        <CardTitle className="text-2xl">Generate AI Summary</CardTitle>
+        <CardDescription className="text-sm mt-1">
+          Customize the summary for your audience and preferred language.
         </CardDescription>
       </CardHeader>
       <Form {...form}>

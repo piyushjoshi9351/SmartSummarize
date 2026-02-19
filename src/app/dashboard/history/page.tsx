@@ -61,25 +61,30 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Summary History</h1>
-        <p className="text-muted-foreground">
-          Review your previously generated summaries.
+    <div className="space-y-12">
+      <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
+        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-blue-500 to-primary bg-clip-text text-transparent">
+          📚 Summary History
+        </h1>
+        <p className="text-muted-foreground text-lg max-w-2xl">
+          Review and explore all your previously generated summaries in one place.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Saved Summaries</CardTitle>
-          <CardDescription>
-            Here are all the summaries you have saved across all your documents.
+      <Card className="border-primary/20 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
+        <CardHeader className="bg-gradient-to-r from-blue-500/5 to-primary/5 border-b border-primary/10">
+          <CardTitle className="text-2xl">✨ Saved Summaries</CardTitle>
+          <CardDescription className="text-sm mt-1">
+            All the summaries you have generated across your documents.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex justify-center items-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex justify-center items-center py-16 animate-in fade-in">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground text-sm">Loading your summaries...</p>
+              </div>
             </div>
           ) : error ? (
             <div className="text-center py-16">
@@ -94,27 +99,27 @@ export default function HistoryPage() {
           ) : history && history.length > 0 ? (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Document Name</TableHead>
-                  <TableHead>Audience</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="w-[40%]">Summary</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                <TableRow className="hover:bg-transparent border-primary/10">
+                  <TableHead className="font-semibold">Document</TableHead>
+                  <TableHead className="font-semibold">Audience</TableHead>
+                  <TableHead className="font-semibold">Date</TableHead>
+                  <TableHead className="w-[40%] font-semibold">Summary</TableHead>
+                  <TableHead className="text-right font-semibold">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {history.map((item: any) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">
+                {history.map((item: any, idx: number) => (
+                  <TableRow key={item.id} className="border-primary/5 hover:bg-primary/5 transition-colors duration-200 animate-in fade-in slide-in-from-left" style={{ animationDelay: `${idx * 50}ms` }}>
+                    <TableCell className="font-medium text-primary">
                       {item.documentName}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{item.audience}</Badge>
+                      <Badge variant="outline" className="hover:bg-primary/10 transition-colors duration-200">{item.audience}</Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
                       {new Date(item.generationDate).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="max-w-xs truncate">
+                    <TableCell className="max-w-xs truncate text-muted-foreground">
                       {item.summaryText}
                     </TableCell>
                     <TableCell className="text-right">
@@ -122,7 +127,7 @@ export default function HistoryPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleViewSummary(item)}
-                        className="gap-2"
+                        className="gap-2 hover:bg-primary/10 hover:text-primary transition-all duration-200"
                       >
                         <Eye className="h-4 w-4" />
                         View
@@ -133,11 +138,10 @@ export default function HistoryPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="text-center py-16">
-              <h3 className="text-lg font-semibold">No History Found</h3>
-              <p className="text-muted-foreground mt-2">
-                You haven&apos;t saved any summaries yet. Generate a summary and
-                save it to see it here.
+            <div className="text-center py-16 animate-in fade-in duration-500">
+              <h3 className="text-lg font-semibold">📚 No History Found</h3>
+              <p className="text-muted-foreground mt-2 text-sm">
+                You haven&apos;t saved any summaries yet. Generate a summary from a document and save it to see it here.
               </p>
             </div>
           )}

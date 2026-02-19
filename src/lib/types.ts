@@ -5,7 +5,10 @@ export type DocumentData = {
   uploadDate: string;
   fileType: string;
   fileSize: number;
-  text: string;
+  text?: string;
+  textPreview?: string;
+  textChunkCount?: number;
+  hasChunks?: boolean;
   name?: string; // for backward compatibility with older mock data if any
   createdAt?: Date; // for backward compatibility with older mock data if any
 };

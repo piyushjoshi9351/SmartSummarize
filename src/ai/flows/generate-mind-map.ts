@@ -11,6 +11,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {buildMindMap} from '@/ai/local-heuristics';
+import {shouldUseGeminiPrimary} from '@/ai/provider';
 
 // Define the interface for the recursive type
 export interface MindMapNode {
@@ -33,10 +35,35 @@ const GenerateMindMapInputSchema = z.object({
 });
 export type GenerateMindMapInput = z.infer<typeof GenerateMindMapInputSchema>;
 
+async function generateMindMapLocal(input: GenerateMindMapInput): Promise<MindMapNode> {
+  try {
+    const response = await fetch('http://localhost:5000/api/mind-map', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: input.documentText}),
+    });
+
+    if (!response.ok) {
+      console.warn(`⚠️  Mind map API failed (${response.status}), using fallback`);
+      return buildMindMap(input.documentText);
+    }
+
+    const data = await response.json();
+    return data.mindMap || buildMindMap(input.documentText);
+  } catch (error) {
+    console.warn(`⚠️  Mind map API error: ${error}, using fallback`);
+    return buildMindMap(input.documentText);
+  }
+}
+
 export async function generateMindMap(
   input: GenerateMindMapInput
 ): Promise<MindMapNode> {
-  return generateMindMapFlow(input);
+  if (shouldUseGeminiPrimary('mindMap')) {
+    return generateMindMapFlow(input);
+  }
+
+  return generateMindMapLocal(input);
 }
 
 const prompt = ai.definePrompt({

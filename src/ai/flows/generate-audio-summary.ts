@@ -12,6 +12,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import * as wav from 'wav';
 import { googleAI } from '@genkit-ai/google-genai';
+import { canUseGeminiFor } from '@/ai/provider';
 
 const GenerateAudioSummaryInputSchema = z.object({
   text: z.string().describe('The text to convert to speech.'),
@@ -30,6 +31,9 @@ export type GenerateAudioSummaryOutput = z.infer<
 export async function generateAudioSummary(
   input: GenerateAudioSummaryInput
 ): Promise<GenerateAudioSummaryOutput> {
+  if (!canUseGeminiFor('audio')) {
+    throw new Error('Audio generation requires GOOGLE_GENAI_API_KEY or AI_PROVIDER=gemini.');
+  }
   return generateAudioSummaryFlow(input);
 }
 

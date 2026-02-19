@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Send, Mic, Sparkles } from 'lucide-react';
@@ -173,26 +174,38 @@ export function ChatView({ document }: { document: DocumentData }) {
   };
 
   return (
-    <div className="flex flex-col h-[70vh]">
+    <div className="flex flex-col h-[70vh] gap-4">
+      <Card className="border-primary/20 shadow-lg shadow-primary/10">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 border-b border-primary/10 pb-3">
+          <CardTitle className="text-2xl">Chat with Document</CardTitle>
+          <CardDescription className="text-sm mt-1">
+            Ask questions and get instant answers from your document.
+          </CardDescription>
+        </CardHeader>
+      </Card>
       <ScrollArea className="flex-1 p-4">
         {messages.length === 0 && !loading ? (
-           <div className="text-center py-8">
-             <div className="flex justify-center items-center mb-4">
-                <Sparkles className="h-6 w-6 mr-2 text-primary" />
-                <h3 className="text-lg font-semibold">AI-Suggested Questions</h3>
+           <div className="text-center py-8 animate-in fade-in duration-500">
+             <div className="flex justify-center items-center mb-6">
+                <Sparkles className="h-6 w-6 mr-2 text-primary animate-spin" style={{ animationDuration: '3s' }} />
+                <h3 className="text-lg font-semibold">Suggested Questions</h3>
              </div>
              {isLoadingSuggestions ? (
-                <div className="flex justify-center items-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <div className="flex justify-center items-center py-4 animate-in fade-in">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <p className="text-xs text-muted-foreground">Generating questions...</p>
+                    </div>
                 </div>
              ) : suggestedQuestions.length > 0 ? (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-3">
                     {suggestedQuestions.map((q, i) => (
                         <Button
                           key={i}
                           variant="outline"
                           size="sm"
-                          className="w-full max-w-md text-left justify-start h-auto whitespace-normal py-2"
+                          className="w-full max-w-md text-left justify-start h-auto whitespace-normal py-3 hover:bg-primary/10 hover:text-primary transition-all duration-200 border-primary/20 animate-in fade-in slide-in-from-bottom" 
+                          style={{ animationDelay: `${i * 100}ms` }}
                           onClick={() => handleSuggestionClick(q)}
                         >
                            {q}
@@ -200,8 +213,8 @@ export function ChatView({ document }: { document: DocumentData }) {
                     ))}
                 </div>
              ) : (
-                <div className="text-center py-4">
-                    <p className="text-muted-foreground text-sm">Couldn't generate suggestions for this document.</p>
+                <div className="text-center py-4 animate-in fade-in">
+                    <p className="text-muted-foreground text-sm">Couldn't generate suggestions. Try typing a question directly!</p>
                 </div>
              )}
            </div>

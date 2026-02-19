@@ -176,32 +176,38 @@ function RecentDocuments() {
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-lg">
+    <div className="space-y-12">
+      <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
+        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-primary/80 bg-clip-text text-transparent">
+          Dashboard
+        </h1>
+        <p className="text-muted-foreground text-lg max-w-2xl">
           Welcome back! Let's turn your documents into insights.
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {actionCards.map((card) => (
+        {actionCards.map((card, idx) => (
           <Card
             key={card.title}
-            className="group relative transition-all duration-300 hover:border-primary/50 hover:shadow-primary/10 hover:shadow-lg hover:-translate-y-1"
+            className="group relative overflow-hidden transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-2 cursor-pointer animate-in fade-in slide-in-from-bottom duration-500"
+            style={{
+              animationDelay: `${idx * 50}ms`
+            }}
           >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <Link href={card.href} className="absolute inset-0 z-10" />
-            <CardHeader className="flex flex-row items-center gap-4">
-              <div className={`rounded-lg p-3 bg-secondary ${card.color}`}>
+            <CardHeader className="flex flex-row items-center gap-4 relative z-[1]">
+              <div className={`rounded-xl p-3 bg-secondary group-hover:scale-110 transition-transform duration-300 ${card.color}`}>
                 <card.icon className="h-6 w-6" />
               </div>
-              <div>
-                <CardTitle className="text-xl">{card.title}</CardTitle>
-                <CardDescription>{card.description}</CardDescription>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg group-hover:text-primary transition-colors duration-300">{card.title}</CardTitle>
+                <CardDescription className="text-xs">{card.description}</CardDescription>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <CardContent className="relative z-[1]">
+              <div className="flex items-center text-sm font-medium text-muted-foreground group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
                 {card.cta} <ArrowRight className="ml-2 h-4 w-4" />
               </div>
             </CardContent>
@@ -209,7 +215,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 animate-in fade-in slide-in-from-bottom duration-700" style={{ animationDelay: "400ms" }}>
         <RecentDocuments />
       </div>
     </div>

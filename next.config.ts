@@ -7,6 +7,17 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  webpack: (config) => {
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      {
+        module:
+          /@opentelemetry\/instrumentation\/build\/esm\/platform\/node\/instrumentation\.js/,
+        message: /Critical dependency: the request of a dependency is an expression/,
+      },
+    ];
+    return config;
+  },
   images: {
     remotePatterns: [
       {

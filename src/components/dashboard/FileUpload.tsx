@@ -11,8 +11,50 @@ import {
   useFirestore,
   addDocumentNonBlocking,
 } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, doc, writeBatch } from "firebase/firestore";
 import { cn } from "@/lib/utils";
+
+const MAX_INLINE_TEXT_CHARS = 500000; // Increased from 200KB to 500KB
+const CHUNK_SIZE_CHARS = 500000; // Increased from 150KB to 500KB - fewer chunks = faster writes
+const MAX_BATCH_SIZE = 450; // Firestore batch limit is 500, use 450 for safety
+
+function splitIntoChunks(text: string, chunkSize: number) {
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < text.length) {
+    chunks.push(text.slice(start, start + chunkSize));
+    start += chunkSize;
+  }
+  return chunks;
+}
+
+// Split batch writes into smaller batches to stay within Firestore 500-operation limit
+async function writeBatchesInParallel(
+  firestore: any,
+  chunksRef: any,
+  chunks: string[]
+) {
+  const batches = [];
+  for (let i = 0; i < chunks.length; i += MAX_BATCH_SIZE) {
+    const batch = writeBatch(firestore);
+    const batchChunks = chunks.slice(i, i + MAX_BATCH_SIZE);
+    
+    batchChunks.forEach((chunk, batchIndex) => {
+      const chunkIndex = i + batchIndex;
+      const chunkDoc = doc(chunksRef);
+      batch.set(chunkDoc, {
+        index: chunkIndex,
+        text: chunk,
+        createdAt: new Date().toISOString(),
+      });
+    });
+    
+    batches.push(batch.commit());
+  }
+  
+  // Execute all batches
+  await Promise.all(batches);
+}
 
 export function FileUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -32,8 +74,8 @@ export function FileUpload() {
     onDrop: (acceptedFiles) => {
       if (acceptedFiles.length > 0) {
         const file = acceptedFiles[0];
-        // Validate file size (max 150MB to support large documents like 200+ page PDFs)
-        const maxSizeMB = 150;
+        // Validate file size (max 300MB to support very large documents)
+        const maxSizeMB = 300;
         if (file.size > maxSizeMB * 1024 * 1024) {
           toast({
             title: "File Too Large",
@@ -67,20 +109,20 @@ export function FileUpload() {
     startTransition(async () => {
       try {
         const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
-        const estimatedPages = Math.ceil(file.size / 4000); // Rough estimate: ~4KB per page
+        const estimatedPages = Math.ceil(file.size / 4000);
 
         toast({
-          title: "Processing Document...",
-          description: `File size: ${fileSizeMB}MB (~${estimatedPages} pages). Text extraction in progress... This may take a minute for large files.`,
+          title: "⚡ Processing Document...",
+          description: `File: ${fileSizeMB}MB (~${estimatedPages} pages). Extracting text...`,
         });
 
-        // Use API route for large files instead of server action
         const formData = new FormData();
         formData.append("file", file);
 
         const extractResponse = await fetch("/api/extract-text", {
           method: "POST",
           body: formData,
+          keepalive: true,
         });
 
         if (!extractResponse.ok) {
@@ -90,19 +132,54 @@ export function FileUpload() {
 
         const { text } = await extractResponse.json();
 
+        toast({
+          title: "💾 Saving to Database...",
+          description: "Creating document record...",
+        });
+
         const docsRef = collection(firestore, "users", user.uid, "documents");
+        const textPreview = text.slice(0, 5000);
+        const chunked = text.length > MAX_INLINE_TEXT_CHARS;
+
         const docRef = await addDocumentNonBlocking(docsRef, {
           userId: user.uid,
           fileName: file.name,
           uploadDate: new Date().toISOString(),
           fileType: file.type,
           fileSize: file.size,
-          text: text,
+          ...(chunked ? {} : { text }),
+          textPreview,
+          textChunkCount: chunked ? Math.ceil(text.length / CHUNK_SIZE_CHARS) : 0,
+          hasChunks: chunked,
         });
 
+        if (chunked) {
+          const chunksRef = collection(
+            firestore,
+            "users",
+            user.uid,
+            "documents",
+            docRef.id,
+            "chunks"
+          );
+          const chunks = splitIntoChunks(text, CHUNK_SIZE_CHARS);
+          
+          // Use optimized parallel batch writes
+          toast({
+            title: `🔄 Writing ${chunks.length} Chunks in Parallel...`,
+            description: `Storing ~${(CHUNK_SIZE_CHARS / 1024).toFixed(0)}KB chunks to database...`,
+          });
+          
+          await writeBatchesInParallel(firestore, chunksRef, chunks);
+        }
+
         toast({
-          title: "Upload Successful",
-          description: `${file.name} has been processed.`,
+          title: "✅ Document Ready!",
+          description: chunked
+            ? `${file.name} stored with ${Math.ceil(
+                text.length / CHUNK_SIZE_CHARS
+              )} optimized chunks.`
+            : `${file.name} has been processed and stored.`,
         });
 
         router.push(`/dashboard/document/${docRef.id}`);
@@ -149,20 +226,25 @@ export function FileUpload() {
         <input {...getInputProps()} />
         
         <div className={cn(
-          "flex flex-col items-center justify-center text-center transition-opacity duration-300",
-          file ? "opacity-0" : "opacity-100"
+          "flex flex-col items-center justify-center text-center transition-all duration-300 animate-in fade-in",
+          file ? "opacity-0 pointer-events-none" : "opacity-100"
         )}>
-          <UploadCloud className={cn(
-            "h-16 w-16 text-muted-foreground transition-transform duration-300",
-            isDragActive && "scale-110 -translate-y-2 text-primary"
-          )} />
-          <p className="mt-4 text-lg font-medium text-foreground">
+          <div className="relative mb-4">
+            <UploadCloud className={cn(
+              "h-16 w-16 transition-all duration-300",
+              isDragActive ? "scale-125 -translate-y-2 text-primary animate-bounce" : "text-muted-foreground group-hover:text-primary/70"
+            )} />
+            {isDragActive && (
+              <div className="absolute inset-0 rounded-full bg-primary/20" style={{ animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" }} />
+            )}
+          </div>
+          <p className="text-lg font-semibold text-foreground transition-colors duration-300">
             {isDragActive
-              ? "Drop it like it's hot!"
-              : "Drag & drop a file here"}
+              ? "✨ Drop it here!"
+              : "📁 Drag & drop your file"}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
-             or click to select a file (PDF or DOCX)
+          <p className="text-sm text-muted-foreground mt-2 font-medium">
+             or <span className="text-primary cursor-pointer hover:underline">browse files</span> (PDF, DOCX, up to 300MB)
           </p>
         </div>
 

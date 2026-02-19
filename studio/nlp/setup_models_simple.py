@@ -26,7 +26,10 @@ class SimpleModelSetup:
             model_name = "facebook/bart-large-cnn"
             print(f"  Loading {model_name}...")
             
-            pipe = pipeline("summarization", model=model_name)
+            try:
+                pipe = pipeline("summarization", model=model_name)
+            except Exception:
+                pipe = pipeline("text2text-generation", model=model_name)
             
             # Save model locally
             model_path = self.models_dir / "summarization"
@@ -45,7 +48,7 @@ class SimpleModelSetup:
         """Setup QA pipeline"""
         print("\n[2/3] Setting up QA Model...")
         try:
-            model_name = "distilbert-base-uncased-distilled-squad"
+            model_name = "deepset/roberta-base-squad2"
             print(f"  Loading {model_name}...")
             
             pipe = pipeline("question-answering", model=model_name)
@@ -67,7 +70,7 @@ class SimpleModelSetup:
         """Setup tone analysis pipeline"""
         print("\n[3/3] Setting up Tone Analysis Model...")
         try:
-            model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+            model_name = "cardiffnlp/twitter-roberta-base-sentiment-latest"
             print(f"  Loading {model_name}...")
             
             pipe = pipeline("sentiment-analysis", model=model_name)

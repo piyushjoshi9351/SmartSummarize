@@ -1,5 +1,45 @@
-# Firebase Studio
+# SummarAIze - Hybrid AI Document Summarizer
 
-This is a NextJS starter in Firebase Studio.
+SummarAIze is a Next.js app for summarizing, chatting with, and analyzing documents using a **hybrid AI stack**:
 
-To get started, take a look at src/app/page.tsx.
+- **Local NLP server** for summaries, Q&A, and tone analysis
+- **Gemini API** for mind maps, comparisons, audio summaries, and suggested questions
+
+## Quick Start
+
+1) Install dependencies
+```bash
+npm install
+```
+
+2) Configure environment
+```bash
+cp .env.example .env.local
+```
+
+3) Start local NLP server (required for local or hybrid)
+```bash
+python nlp/inference_server.py
+```
+
+4) Start the app
+```bash
+npm run dev
+```
+
+Open http://localhost:9002
+
+## Hybrid AI Modes
+
+Set these in `.env.local`:
+
+```bash
+AI_PROVIDER=hybrid
+NLP_SERVER_URL=http://localhost:5000
+GOOGLE_GENAI_API_KEY=your_key_here
+```
+
+Modes:
+- `local`: only the local NLP server is used
+- `gemini`: only Gemini API is used
+- `hybrid`: local for summary/chat/tone; Gemini for mind map/compare/audio/suggestions

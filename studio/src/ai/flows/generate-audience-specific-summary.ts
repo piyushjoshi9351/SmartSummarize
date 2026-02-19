@@ -35,6 +35,8 @@ export type GenerateAudienceSpecificSummaryOutput = z.infer<
 >;
 
 const NLP_SERVER_URL = process.env.NLP_SERVER_URL || 'http://localhost:5000';
+const SUMMARY_TARGET_MIN_WORDS = 150;
+const SUMMARY_TARGET_MAX_WORDS = 200;
 
 /**
  * Adjust summary complexity based on audience
@@ -66,7 +68,11 @@ export async function generateAudienceSpecificSummary(
     const response = await fetch(`${NLP_SERVER_URL}/api/summarize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: input.text }),
+      body: JSON.stringify({
+        text: input.text,
+        target_min_words: SUMMARY_TARGET_MIN_WORDS,
+        target_max_words: SUMMARY_TARGET_MAX_WORDS,
+      }),
       signal: AbortSignal.timeout(30000), // 30 second timeout
     });
 
