@@ -122,7 +122,6 @@ export function FileUpload() {
         const extractResponse = await fetch("/api/extract-text", {
           method: "POST",
           body: formData,
-          keepalive: true,
         });
 
         if (!extractResponse.ok) {
@@ -152,6 +151,10 @@ export function FileUpload() {
           textChunkCount: chunked ? Math.ceil(text.length / CHUNK_SIZE_CHARS) : 0,
           hasChunks: chunked,
         });
+
+        if (!docRef || !docRef.id) {
+          throw new Error("Unable to create document record. Please check permissions and try again.");
+        }
 
         if (chunked) {
           const chunksRef = collection(
@@ -194,7 +197,7 @@ export function FileUpload() {
         } else if (error?.message?.includes("timeout")) {
           errorDescription = "Request took too long. File might be too large or network too slow.";
         } else if (error?.message?.includes("413") || error?.message?.includes("Payload")) {
-          errorDescription = "File is too large to process. Maximum size is 150MB.";
+          errorDescription = "File is too large to process. Maximum size is 300MB.";
         } else {
           errorDescription = error?.message || errorDescription;
         }

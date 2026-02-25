@@ -8,25 +8,22 @@ export default function UploadPage() {
   return (
     <div className="space-y-12">
       <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
-        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          📄 Upload Document
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Upload Document
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl">
-          Upload PDFs or Word files (up to 300MB) to generate summaries, chat, analyze tone, and compare documents.
-        </p>
+        <p className="text-muted-foreground text-base max-w-2xl">Drop your file and launch the full AI workflow instantly.</p>
       </div>
 
       <div className="flex justify-center">
-        <Card className="w-full max-w-2xl border-primary/20 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 border-b border-primary/10">
+        <Card className="relative w-full max-w-2xl overflow-hidden border-primary/20 bg-card/80 shadow-xl shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,hsl(var(--primary)/0.08),transparent,hsl(var(--accent)/0.1))]" />
+            <CardHeader className="relative bg-gradient-to-r from-primary/5 to-accent/5 border-b border-primary/10">
                 <CardTitle className="text-2xl flex items-center gap-2">
-                  <span>✨</span> New Document
+                  New Document
                 </CardTitle>
-                <CardDescription className="text-sm mt-2">
-                    Drag and drop a file or click to select (PDF, DOCX, up to 300MB)
-                </CardDescription>
+                <CardDescription className="text-sm mt-2">PDF, DOCX up to 300MB.</CardDescription>
             </CardHeader>
-            <CardContent className="pt-8">
+            <CardContent className="relative pt-8">
                 <FileUpload />
             </CardContent>
         </Card>

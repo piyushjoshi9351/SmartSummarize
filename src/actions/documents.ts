@@ -46,14 +46,24 @@ async function safeAction<T>(action: Promise<T>): Promise<{ success: true; data:
 export async function extractTextFromFile({
   fileBuffer,
   fileType,
+  fileName,
 }: {
   fileBuffer: ArrayBuffer;
   fileType: string;
+  fileName?: string;
 }): Promise<string> {
   const buffer = Buffer.from(fileBuffer);
+  const normalizedFileType = (fileType || '').toLowerCase();
+  const normalizedFileName = (fileName || '').toLowerCase();
+  const isPdf =
+    normalizedFileType === 'application/pdf' || normalizedFileName.endsWith('.pdf');
+  const isDocx =
+    normalizedFileType ===
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    normalizedFileName.endsWith('.docx');
 
   try {
-    if (fileType === "application/pdf") {
+    if (isPdf) {
       const data = await pdf(buffer);
       if (!data.text || data.text.trim().length === 0) {
         throw new Error(
@@ -61,17 +71,14 @@ export async function extractTextFromFile({
         );
       }
       return data.text;
-    } else if (
-      fileType ===
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
+    } else if (isDocx) {
       const { value } = await mammoth.extractRawText({ buffer });
       if (!value || value.trim().length === 0) {
         throw new Error("Document appears to be empty or has no extractable text.");
       }
       return value;
     } else {
-      throw new Error("Unsupported file type");
+      throw new Error('Unsupported file type. Please upload PDF or DOCX.');
     }
   } catch (error) {
     console.error("Error extracting text:", error);

@@ -67,29 +67,40 @@ export function SummaryView({ document }: { document: DocumentData }) {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    const sourceText = document.text || document.textPreview || "";
+    if (!sourceText.trim()) {
+      toast({
+        title: "No text available",
+        description: "This document has no readable text for summary generation.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     setSummary(null);
     setAudioSrc(null);
     const result = await generateSummaryAction({
-      text: document.text,
+      text: sourceText,
       audience: values.audience,
       language: values.language,
     });
     setLoading(false);
 
-    if (result.success && result.data) {
-      setSummary({
-        ...result.data,
-        audience: values.audience,
-        language: values.language,
-      });
-    } else {
+    if (!result.success) {
       toast({
         title: "Error",
-        description: result.error || "Failed to generate summary.",
+        description: result.error,
         variant: "destructive",
       });
+      return;
     }
+
+    setSummary({
+      ...result.data,
+      audience: values.audience,
+      language: values.language,
+    });
   }
 
   const handleSave = async () => {
@@ -138,16 +149,16 @@ export function SummaryView({ document }: { document: DocumentData }) {
     const result = await generateAudioSummaryAction({ text: summary.summary.join("\n") });
 
     setIsGeneratingAudio(false);
-    if (result.success && result.data) {
-      setAudioSrc(result.data.audioDataUri);
-    } else {
+    if (!result.success) {
       toast({
         title: "Audio Generation Failed",
-        description:
-          result.error || "Could not generate audio for the summary.",
+        description: result.error,
         variant: "destructive",
       });
+      return;
     }
+
+    setAudioSrc(result.data.audioDataUri);
   };
 
   return (

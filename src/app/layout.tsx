@@ -33,7 +33,16 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          {children}
+          <div className="relative min-h-screen overflow-x-hidden">
+            <div className="pointer-events-none fixed inset-0 -z-10">
+              <div className="absolute inset-0 bg-background" />
+              <div className="absolute -left-24 -top-24 h-80 w-80 rounded-full bg-primary/20 blur-3xl motion-safe:animate-float-slow" />
+              <div className="absolute right-0 top-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl motion-safe:animate-float-fast" />
+              <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-secondary/40 blur-3xl motion-safe:animate-float-slow" />
+              <div className="absolute inset-0 bg-[linear-gradient(120deg,hsl(var(--primary)/0.10),transparent,hsl(var(--accent)/0.10))] bg-[length:220%_220%] motion-safe:animate-shimmer" />
+            </div>
+            {children}
+          </div>
           <Toaster />
         </FirebaseClientProvider>
       </body>

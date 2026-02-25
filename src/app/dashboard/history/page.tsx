@@ -63,17 +63,17 @@ export default function HistoryPage() {
   return (
     <div className="space-y-12">
       <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
-        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-blue-500 to-primary bg-clip-text text-transparent">
-          📚 Summary History
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Summary History
         </h1>
         <p className="text-muted-foreground text-lg max-w-2xl">
-          Review and explore all your previously generated summaries in one place.
+          Access and review all generated summaries in one place.
         </p>
       </div>
 
-      <Card className="border-primary/20 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
-        <CardHeader className="bg-gradient-to-r from-blue-500/5 to-primary/5 border-b border-primary/10">
-          <CardTitle className="text-2xl">✨ Saved Summaries</CardTitle>
+      <Card className="border-primary/20 bg-card/80 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 border-b border-primary/10">
+          <CardTitle className="text-2xl">Saved Summaries</CardTitle>
           <CardDescription className="text-sm mt-1">
             All the summaries you have generated across your documents.
           </CardDescription>
@@ -109,7 +109,7 @@ export default function HistoryPage() {
               </TableHeader>
               <TableBody>
                 {history.map((item: any, idx: number) => (
-                  <TableRow key={item.id} className="border-primary/5 hover:bg-primary/5 transition-colors duration-200 animate-in fade-in slide-in-from-left" style={{ animationDelay: `${idx * 50}ms` }}>
+                  <TableRow key={item.id} className="border-primary/5 hover:bg-primary/5/70 transition-colors duration-200 animate-in fade-in slide-in-from-left" style={{ animationDelay: `${idx * 50}ms` }}>
                     <TableCell className="font-medium text-primary">
                       {item.documentName}
                     </TableCell>
@@ -139,7 +139,7 @@ export default function HistoryPage() {
             </Table>
           ) : (
             <div className="text-center py-16 animate-in fade-in duration-500">
-              <h3 className="text-lg font-semibold">📚 No History Found</h3>
+              <h3 className="text-lg font-semibold">No History Found</h3>
               <p className="text-muted-foreground mt-2 text-sm">
                 You haven&apos;t saved any summaries yet. Generate a summary from a document and save it to see it here.
               </p>
@@ -149,7 +149,7 @@ export default function HistoryPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto border-border/60 bg-card/85 backdrop-blur-md">
           <DialogHeader>
             <DialogTitle>{selectedSummary?.documentName}</DialogTitle>
             <DialogDescription>

@@ -89,18 +89,18 @@ export function RegisterForm() {
   }
 
   return (
-    <Card>
+    <Card className="border-primary/20 bg-card/85 shadow-xl shadow-primary/10">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4 pt-6">
+        <CardContent className="space-y-5 pt-6">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="John Doe" className="bg-background/70 border-border/70" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -111,9 +111,9 @@ export function RegisterForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@example.com" {...field} />
+                    <Input placeholder="name@example.com" className="bg-background/70 border-border/70" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -124,9 +124,9 @@ export function RegisterForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input type="password" placeholder="••••••••" className="bg-background/70 border-border/70" {...field} />
                   </FormControl>
                   <FormMessage />
                   <p className="text-xs text-muted-foreground mt-2">

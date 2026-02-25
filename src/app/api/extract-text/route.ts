@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const result = await extractTextFromFile({
       fileBuffer: arrayBuffer,
       fileType: file.type,
+      fileName: file.name,
     });
 
     return NextResponse.json({

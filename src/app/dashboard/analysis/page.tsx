@@ -26,7 +26,7 @@ import {
   useCollection,
   useMemoFirebase,
 } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, orderBy, query } from "firebase/firestore";
 import { DocumentData } from "@/lib/types";
 import { analyzeDocumentToneAction } from "@/actions/documents";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +51,35 @@ export default function AnalysisPage() {
   const { data: documents, isLoading: isLoadingDocs } =
     useCollection<DocumentData>(docsQuery);
 
+  const resolveDocumentText = async (documentId: string) => {
+    if (!user) return "";
+
+    const documentRef = doc(firestore, "users", user.uid, "documents", documentId);
+    const documentSnap = await getDoc(documentRef);
+    if (!documentSnap.exists()) return "";
+
+    const data = documentSnap.data() as DocumentData;
+    if (data.text?.trim()) return data.text;
+
+    if (data.hasChunks) {
+      const chunksRef = collection(
+        firestore,
+        "users",
+        user.uid,
+        "documents",
+        documentId,
+        "chunks"
+      );
+      const chunksSnap = await getDocs(query(chunksRef, orderBy("index", "asc")));
+      const text = chunksSnap.docs
+        .map((chunkDoc) => (chunkDoc.data() as { text?: string }).text || "")
+        .join("");
+      if (text.trim()) return text;
+    }
+
+    return data.textPreview || "";
+  };
+
   const handleGenerate = async () => {
     if (!selectedDocId) {
       toast({
@@ -67,24 +96,34 @@ export default function AnalysisPage() {
     setLoading(true);
     setAnalysisResult(null);
 
-    const result = await analyzeDocumentToneAction({
-      documentText: selectedDoc.text,
-    });
-
-    setLoading(false);
-    if (result.success && result.data) {
-      setAnalysisResult(result.data);
+    const documentText = await resolveDocumentText(selectedDoc.id);
+    if (!documentText.trim()) {
+      setLoading(false);
       toast({
-        title: "Analysis Complete",
-        description: `Successfully analyzed ${selectedDoc.fileName}.`,
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: result.error || "Failed to analyze document.",
+        title: "Document text unavailable",
+        description: "Selected document has no readable text.",
         variant: "destructive",
       });
+      return;
     }
+
+    const result = await analyzeDocumentToneAction({ documentText });
+
+    setLoading(false);
+    if (!result.success) {
+      toast({
+        title: "Error",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAnalysisResult(result.data);
+    toast({
+      title: "Analysis Complete",
+      description: `Successfully analyzed ${selectedDoc.fileName}.`,
+    });
   };
 
   const sentimentColors: { [key: string]: string } = {
@@ -97,20 +136,16 @@ export default function AnalysisPage() {
   return (
     <div className="space-y-12">
       <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
-        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-yellow-500 bg-clip-text text-transparent">
-          🎭 Tone & Style Analysis
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Tone & Style Analysis
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl">
-          Understand the author's voice, sentiment, emotional tone, and writing style at a glance.
-        </p>
+        <p className="text-muted-foreground text-base max-w-2xl">See sentiment and writing style quickly.</p>
       </div>
 
-      <Card className="border-primary/20 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-500">
-        <CardHeader className="bg-gradient-to-r from-yellow-500/5 to-primary/5 border-b border-primary/10">
-          <CardTitle className="text-2xl">✨ Generate Analysis</CardTitle>
-          <CardDescription className="text-sm mt-1">
-            Select a document to run a comprehensive linguistic and sentiment analysis.
-          </CardDescription>
+      <Card className="border-primary/20 bg-card/80 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-500">
+        <CardHeader className="bg-gradient-to-r from-accent/5 to-primary/5 border-b border-primary/10">
+          <CardTitle className="text-2xl">Generate Analysis</CardTitle>
+          <CardDescription className="text-sm mt-1">Select a document and get instant tone diagnostics.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoadingDocs ? (
@@ -159,7 +194,7 @@ export default function AnalysisPage() {
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </div>
               <p className="text-muted-foreground text-center">
-                🤖 Analyzing the document... This can take a moment as we examine sentiment, tone, and style.
+                Analyzing the document... this may take a moment.
               </p>
             </div>
           </CardContent>
@@ -167,11 +202,12 @@ export default function AnalysisPage() {
       )}
 
       {analysisResult && !loading && (
-        <Card>
-          <CardHeader>
+        <Card className="relative overflow-hidden border-primary/20 bg-card/80 shadow-xl animate-in fade-in duration-500">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(130deg,hsl(var(--primary)/0.08),transparent,hsl(var(--accent)/0.08))]" />
+          <CardHeader className="border-b border-primary/10 bg-gradient-to-r from-primary/5 to-accent/5">
             <CardTitle>Analysis Results</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="relative space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card
                 className={
@@ -224,7 +260,7 @@ export default function AnalysisPage() {
       )}
 
       {!analysisResult && !loading && (
-        <div className="text-center py-16 border-2 border-dashed rounded-xl border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 animate-in fade-in duration-500" style={{ animationDelay: "200ms" }}>
+        <div className="text-center py-16 border-2 border-dashed rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 to-accent/10 animate-in fade-in duration-500" style={{ animationDelay: "200ms" }}>
           <Beaker className="mx-auto h-12 w-12 text-muted-foreground/50" />
           <h3 className="text-lg font-semibold mt-4">Your analysis will appear here</h3>
           <p className="text-muted-foreground mt-2 text-sm">

@@ -26,7 +26,7 @@ import {
   useCollection,
   useMemoFirebase,
 } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, orderBy, query } from "firebase/firestore";
 import { DocumentData } from "@/lib/types";
 import { compareDocumentsAction } from "@/actions/documents";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +51,35 @@ export default function ComparePage() {
 
   const { data: documents, isLoading: isLoadingDocs } =
     useCollection<DocumentData>(docsQuery);
+
+  const resolveDocumentText = async (documentId: string) => {
+    if (!user) return "";
+
+    const documentRef = doc(firestore, "users", user.uid, "documents", documentId);
+    const documentSnap = await getDoc(documentRef);
+    if (!documentSnap.exists()) return "";
+
+    const data = documentSnap.data() as DocumentData;
+    if (data.text?.trim()) return data.text;
+
+    if (data.hasChunks) {
+      const chunksRef = collection(
+        firestore,
+        "users",
+        user.uid,
+        "documents",
+        documentId,
+        "chunks"
+      );
+      const chunksSnap = await getDocs(query(chunksRef, orderBy("index", "asc")));
+      const text = chunksSnap.docs
+        .map((chunkDoc) => (chunkDoc.data() as { text?: string }).text || "")
+        .join("");
+      if (text.trim()) return text;
+    }
+
+    return data.textPreview || "";
+  };
 
   const handleGenerate = async () => {
     if (!selectedDoc1Id || !selectedDoc2Id) {
@@ -77,27 +106,43 @@ export default function ComparePage() {
     setLoading(true);
     setComparisonResult(null);
 
+    const [documentOneText, documentTwoText] = await Promise.all([
+      resolveDocumentText(doc1.id),
+      resolveDocumentText(doc2.id),
+    ]);
+
+    if (!documentOneText.trim() || !documentTwoText.trim()) {
+      setLoading(false);
+      toast({
+        title: "Document text unavailable",
+        description: "One or both selected documents have no readable text.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const result = await compareDocumentsAction({
-      documentOneText: doc1.text,
-      documentTwoText: doc2.text,
+      documentOneText,
+      documentTwoText,
       documentOneName: doc1.fileName,
       documentTwoName: doc2.fileName,
     });
 
     setLoading(false);
-    if (result.success && result.data) {
-      setComparisonResult(result.data);
-      toast({
-        title: "Comparison Complete",
-        description: `Successfully compared documents.`,
-      });
-    } else {
+    if (!result.success) {
       toast({
         title: "Error",
-        description: result.error || "Failed to compare documents.",
+        description: result.error,
         variant: "destructive",
       });
+      return;
     }
+
+    setComparisonResult(result.data);
+    toast({
+      title: "Comparison Complete",
+      description: `Successfully compared documents.`,
+    });
   };
 
   const canGenerate =
@@ -106,20 +151,16 @@ export default function ComparePage() {
   return (
     <div className="space-y-12">
       <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
-        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-orange-500 to-primary bg-clip-text text-transparent">
-          ⚖️ Compare Documents
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
+          Compare Documents
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl">
-          Analyze two documents side-by-side to discover similarities, differences, and unique insights.
-        </p>
+        <p className="text-muted-foreground text-base max-w-2xl">Compare two files side by side.</p>
       </div>
 
-      <Card className="border-primary/20 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
-        <CardHeader className="bg-gradient-to-r from-orange-500/5 to-primary/5 border-b border-primary/10">
-          <CardTitle className="text-2xl">✨ Generate Comparison</CardTitle>
-          <CardDescription className="text-sm mt-1">
-            Select two different documents to run a detailed comparative analysis.
-          </CardDescription>
+      <Card className="border-primary/20 bg-card/80 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
+        <CardHeader className="bg-gradient-to-r from-accent/5 to-primary/5 border-b border-primary/10">
+          <CardTitle className="text-2xl">Generate Comparison</CardTitle>
+          <CardDescription className="text-sm mt-1">Pick two documents and compare them side by side.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoadingDocs ? (
@@ -188,7 +229,7 @@ export default function ComparePage() {
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </div>
               <p className="text-muted-foreground text-center text-sm">
-                ⚖️ Comparing documents... analyzing similarities, differences, and unique characteristics. This may take a moment.
+                Comparing documents... this may take a moment.
               </p>
             </div>
           </CardContent>
@@ -196,14 +237,15 @@ export default function ComparePage() {
       )}
 
       {comparisonResult && !loading && (
-        <Card className="border-primary/20 shadow-lg animate-in fade-in duration-500" style={{ animationDelay: "100ms" }}>
-          <CardHeader className="bg-gradient-to-r from-orange-500/5 to-primary/5 border-b border-primary/10">
-            <CardTitle className="text-2xl">✨ Comparison Results</CardTitle>
+        <Card className="relative overflow-hidden border-primary/20 bg-card/80 shadow-xl animate-in fade-in duration-500" style={{ animationDelay: "100ms" }}>
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(130deg,hsl(var(--accent)/0.08),transparent,hsl(var(--primary)/0.08))]" />
+          <CardHeader className="bg-gradient-to-r from-accent/5 to-primary/5 border-b border-primary/10">
+            <CardTitle className="text-2xl">Comparison Results</CardTitle>
             <CardDescription>
               Detailed analysis of similarities and differences between the selected documents.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-8 pt-8">
+          <CardContent className="relative space-y-8 pt-8">
             <div>
               <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-green-500">
                 <CheckCircle2 className="h-5 w-5" />
@@ -239,7 +281,7 @@ export default function ComparePage() {
       )}
 
       {!comparisonResult && !loading && (
-        <div className="text-center py-16 border-2 border-dashed rounded-xl border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-primary/5 animate-in fade-in duration-500" style={{ animationDelay: "200ms" }}>
+        <div className="text-center py-16 border-2 border-dashed rounded-2xl border-accent/20 bg-gradient-to-br from-accent/10 to-primary/5 animate-in fade-in duration-500" style={{ animationDelay: "200ms" }}>
           <GitCompareArrows className="mx-auto h-12 w-12 text-muted-foreground/50" />
           <h3 className="text-lg font-semibold mt-4">
             Your comparison will appear here

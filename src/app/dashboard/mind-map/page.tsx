@@ -23,7 +23,7 @@ import {
   useCollection,
   useMemoFirebase,
 } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, orderBy, query } from "firebase/firestore";
 import { DocumentData } from "@/lib/types";
 import { generateMindMapAction } from "@/actions/documents";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +50,35 @@ export default function MindMapPage() {
   const { data: documents, isLoading: isLoadingDocs } =
     useCollection<DocumentData>(docsQuery);
 
+  const resolveDocumentText = async (documentId: string) => {
+    if (!user) return "";
+
+    const documentRef = doc(firestore, "users", user.uid, "documents", documentId);
+    const documentSnap = await getDoc(documentRef);
+    if (!documentSnap.exists()) return "";
+
+    const data = documentSnap.data() as DocumentData;
+    if (data.text?.trim()) return data.text;
+
+    if (data.hasChunks) {
+      const chunksRef = collection(
+        firestore,
+        "users",
+        user.uid,
+        "documents",
+        documentId,
+        "chunks"
+      );
+      const chunksSnap = await getDocs(query(chunksRef, orderBy("index", "asc")));
+      const text = chunksSnap.docs
+        .map((chunkDoc) => (chunkDoc.data() as { text?: string }).text || "")
+        .join("");
+      if (text.trim()) return text;
+    }
+
+    return data.textPreview || "";
+  };
+
   const handleGenerate = async () => {
     if (!selectedDocId) {
       toast({
@@ -66,43 +95,49 @@ export default function MindMapPage() {
     setLoading(true);
     setMindMapData(null);
 
-    const result = await generateMindMapAction({
-      documentText: selectedDoc.text,
-    });
-
-    setLoading(false);
-    if (result.success && result.data) {
-      setMindMapData(result.data);
+    const documentText = await resolveDocumentText(selectedDoc.id);
+    if (!documentText.trim()) {
+      setLoading(false);
       toast({
-        title: "Mind Map Generated",
-        description: `Successfully created a mind map for ${selectedDoc.fileName}.`,
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: result.error || "Failed to generate mind map.",
+        title: "Document text unavailable",
+        description: "Selected document has no readable text.",
         variant: "destructive",
       });
+      return;
     }
+
+    const result = await generateMindMapAction({ documentText });
+
+    setLoading(false);
+    if (!result.success) {
+      toast({
+        title: "Error",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setMindMapData(result.data);
+    toast({
+      title: "Mind Map Generated",
+      description: `Successfully created a mind map for ${selectedDoc.fileName}.`,
+    });
   };
 
   return (
     <div className="space-y-12">
       <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
-        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-green-500 to-primary bg-clip-text text-transparent">
-          🧠 Mind Map
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Mind Map
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl">
-          Visualize the key concepts, ideas, and connections within your documents in a beautiful interactive map.
-        </p>
+        <p className="text-muted-foreground text-base max-w-2xl">Visual map of key concepts.</p>
       </div>
 
-      <Card className="border-primary/20 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
-        <CardHeader className="bg-gradient-to-r from-green-500/5 to-primary/5 border-b border-primary/10">
-          <CardTitle className="text-2xl">✨ Generate a Mind Map</CardTitle>
-          <CardDescription className="text-sm mt-1">
-            Select a document to create an interactive visual map of its key concepts.
-          </CardDescription>
+      <Card className="border-primary/20 bg-card/80 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-700">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 border-b border-primary/10">
+          <CardTitle className="text-2xl">Generate Mind Map</CardTitle>
+          <CardDescription className="text-sm mt-1">Select a document and visualize its concept map.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoadingDocs ? (
@@ -149,7 +184,7 @@ export default function MindMapPage() {
                       <Loader2 className="h-12 w-12 animate-spin text-primary" />
                     </div>
                     <p className="text-muted-foreground text-center text-sm">
-                      🧠 Generating your mind map... visualizing the concepts and connections. This may take a moment.
+                      Generating your mind map... this may take a moment.
                     </p>
                 </div>
             </CardContent>
@@ -159,7 +194,7 @@ export default function MindMapPage() {
       {mindMapData && !loading && <MindMapDisplay mindMapData={mindMapData} />}
 
       {!mindMapData && !loading && (
-         <div className="text-center py-16 border-2 border-dashed rounded-xl border-green-500/20 bg-gradient-to-br from-green-500/5 to-primary/5 animate-in fade-in duration-500" style={{ animationDelay: "200ms" }}>
+        <div className="text-center py-16 border-2 border-dashed rounded-2xl border-primary/20 bg-gradient-to-br from-primary/10 to-accent/5 animate-in fade-in duration-500" style={{ animationDelay: "200ms" }}>
             <Share2 className="mx-auto h-12 w-12 text-muted-foreground/50" />
             <h3 className="text-lg font-semibold mt-4">Your mind map will appear here</h3>
             <p className="text-muted-foreground mt-2 text-sm">

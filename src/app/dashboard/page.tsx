@@ -107,7 +107,7 @@ function RecentDocuments() {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+      <div className="rounded-2xl border border-border/60 bg-card/70 text-card-foreground shadow-lg backdrop-blur-sm">
         <div className="p-10 text-center text-muted-foreground flex justify-center items-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -117,7 +117,7 @@ function RecentDocuments() {
 
   if (!documents || documents.length === 0) {
     return (
-      <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+      <div className="rounded-2xl border border-border/60 bg-card/70 text-card-foreground shadow-lg backdrop-blur-sm">
         <div className="p-10 text-center text-muted-foreground">
           <p className="font-medium">You have no recent documents.</p>
           <p className="text-sm mt-2">
@@ -132,8 +132,8 @@ function RecentDocuments() {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border-border/60 bg-card/70 backdrop-blur-sm">
+      <CardHeader className="border-b border-border/40 bg-gradient-to-r from-primary/5 to-accent/5">
         <CardTitle>Recent Documents</CardTitle>
         <CardDescription>
           Your 5 most recently uploaded documents.
@@ -178,19 +178,28 @@ export default function DashboardPage() {
   return (
     <div className="space-y-12">
       <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
-        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-primary/80 bg-clip-text text-transparent">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-primary/80 bg-clip-text text-transparent">
           Dashboard
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl">
-          Welcome back! Let's turn your documents into insights.
-        </p>
+        <p className="text-muted-foreground text-base max-w-2xl">All tools in one place.</p>
       </div>
+
+      <Card className="relative overflow-hidden border-primary/20 bg-card/70 shadow-xl shadow-primary/10 animate-in fade-in slide-in-from-top duration-700">
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(130deg,hsl(var(--primary)/0.12),transparent,hsl(var(--accent)/0.12))]" />
+        <CardContent className="relative py-8">
+          <p className="text-xs uppercase tracking-[0.25em] text-primary/80">SmartDoc AI Workspace</p>
+          <h2 className="mt-2 text-2xl sm:text-3xl font-semibold">Turn long documents into clear insights</h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Upload a file once, then summarize, chat, compare, and analyze with a smooth animated workflow.
+          </p>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {actionCards.map((card, idx) => (
           <Card
             key={card.title}
-            className="group relative overflow-hidden transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-2 cursor-pointer animate-in fade-in slide-in-from-bottom duration-500"
+            className="group relative overflow-hidden border-border/60 bg-card/80 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1 cursor-pointer animate-in fade-in slide-in-from-bottom duration-500"
             style={{
               animationDelay: `${idx * 50}ms`
             }}
@@ -203,7 +212,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-lg group-hover:text-primary transition-colors duration-300">{card.title}</CardTitle>
-                <CardDescription className="text-xs">{card.description}</CardDescription>
+                <CardDescription className="text-sm">{card.description}</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="relative z-[1]">
