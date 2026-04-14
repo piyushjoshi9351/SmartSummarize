@@ -17,12 +17,17 @@ npm install
 cp .env.example .env.local
 ```
 
-3) Start local NLP server (required for local or hybrid)
+3) Install the free NLP stack
+```bash
+pip install transformers torch sentence-transformers
+```
+
+4) Start local NLP server (required for local or hybrid)
 ```bash
 python nlp/inference_server.py
 ```
 
-4) Start the app
+5) Start the app
 ```bash
 npm run dev
 ```
@@ -43,3 +48,7 @@ Modes:
 - `local`: only the local NLP server is used
 - `gemini`: only Gemini API is used
 - `hybrid`: local for summary/chat/tone; Gemini for mind map/compare/audio/suggestions
+
+## Free Hugging Face Inference
+
+The project already uses a free local Hugging Face Transformers backend for summarization and document Q&A. If your machine is slow, you can swap the local server for the Hugging Face Inference API later without changing the frontend flow shape.

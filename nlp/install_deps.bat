@@ -6,7 +6,7 @@ REM Upgrade pip first
 python -m pip install --upgrade pip
 
 REM Install basic dependencies
-pip install flask numpy pandas nltk --no-cache-dir
+pip install flask numpy pandas nltk PyPDF2 --no-cache-dir
 
 REM Install PyTorch CPU-only version (smaller download)
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir

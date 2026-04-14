@@ -42,6 +42,32 @@ const formSchema = z.object({
     }),
 });
 
+function getRegistrationErrorMessage(error: unknown): {
+  message: string;
+  field?: "email" | "password";
+} {
+  const code = typeof error === "object" && error && "code" in error
+    ? String((error as { code?: unknown }).code ?? "")
+    : "";
+
+  switch (code) {
+    case "auth/email-already-in-use":
+      return {
+        message: "An account with this email already exists. Try signing in instead.",
+        field: "email",
+      };
+    case "auth/invalid-email":
+      return { message: "Please enter a valid email address.", field: "email" };
+    case "auth/weak-password":
+      return {
+        message: "Password is too weak. Use a stronger password.",
+        field: "password",
+      };
+    default:
+      return { message: "Unable to create your account right now. Please try again." };
+  }
+}
+
 export function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -77,13 +103,19 @@ export function RegisterForm() {
       }, { merge: true });
 
       router.push("/dashboard");
-    } catch (error: any) {
-      console.error(error);
+    } catch (error: unknown) {
+      const { message, field } = getRegistrationErrorMessage(error);
+
+      if (field) {
+        form.setError(field, { type: "manual", message });
+      }
+
       toast({
         title: "Registration Failed",
-        description: error.message || "An unexpected error occurred.",
+        description: message,
         variant: "destructive",
       });
+    } finally {
       setLoading(false);
     }
   }

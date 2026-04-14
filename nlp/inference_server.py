@@ -72,6 +72,10 @@ MODEL_CONFIGS = {
 models_cache = {}
 device = "cuda" if torch.cuda.is_available() else "cpu"
 logger.info(f"🔧 Using device: {device} {'(GPU)' if device == 'cuda' else '(CPU)'}")
+prefer_lightweight_models = os.getenv(
+    "PREFER_LIGHTWEIGHT_MODELS",
+    "1" if device == "cpu" else "0",
+) == "1"
 
 
 
@@ -278,16 +282,30 @@ def load_model_with_fallback(model_type: str) -> bool:
         models_config = MODEL_CONFIGS.get(model_type, {})
         best_model = models_config.get("best")
         fallback_model = models_config.get("fallback")
+        model_candidates = [fallback_model, best_model] if prefer_lightweight_models else [best_model, fallback_model]
+        model_candidates = [model for model in model_candidates if model]
         
-        logger.info(f"\n📦 Loading {model_type} model: {best_model}")
+        logger.info(f"\n📦 Loading {model_type} model: {model_candidates[0]}")
         
         if model_type == "summarization":
             # For summarization, we'll use a text generation pipeline approach
             # since 'summarization' task doesn't exist in all versions
             try:
-                logger.info("  Using text2text-generation approach for BART...")
-                tokenizer = AutoTokenizer.from_pretrained(best_model)
-                model = AutoModelForSeq2SeqLM.from_pretrained(best_model)
+                logger.info("  Using text2text-generation approach for summarization...")
+                tokenizer = None
+                model = None
+                for candidate in model_candidates:
+                    try:
+                        tokenizer = AutoTokenizer.from_pretrained(candidate)
+                        model = AutoModelForSeq2SeqLM.from_pretrained(candidate)
+                        logger.info(f"  Loaded summarization candidate: {candidate}")
+                        break
+                    except Exception as candidate_error:
+                        logger.warning(f"  Summarization candidate failed: {candidate_error}")
+                        tokenizer = None
+                        model = None
+                if tokenizer is None or model is None:
+                    raise RuntimeError("No summarization model could be loaded")
                 
                 # Create a custom wrapper for BART
                 def summarize_func(text, max_length=160, min_length=30, **kwargs):
@@ -313,49 +331,49 @@ def load_model_with_fallback(model_type: str) -> bool:
                 
         elif model_type == "qa":
             try:
-                models_cache[model_type] = pipeline(
-                    "question-answering",
-                    model=best_model,
-                    device=0 if device == "cuda" else -1,
-                )
-                logger.info(f"✅ Loaded RoBERTa for Q&A")
+                qa_model = None
+                for candidate in model_candidates:
+                    try:
+                        qa_model = pipeline(
+                            "question-answering",
+                            model=candidate,
+                            device=0 if device == "cuda" else -1,
+                        )
+                        logger.info(f"✅ Loaded QA model: {candidate}")
+                        break
+                    except Exception as candidate_error:
+                        logger.warning(f"⚠️  QA candidate failed: {candidate_error}")
+                        qa_model = None
+                if qa_model is None:
+                    raise RuntimeError("No QA model could be loaded")
+                models_cache[model_type] = qa_model
                 return True
             except Exception as primary_error:
-                logger.warning(f"⚠️  Primary QA model failed: {primary_error}")
-                try:
-                    models_cache[model_type] = pipeline(
-                        "question-answering",
-                        model=fallback_model,
-                        device=0 if device == "cuda" else -1,
-                    )
-                    logger.info(f"✅ Loaded fallback QA model")
-                    return True
-                except Exception as fallback_error:
-                    logger.error(f"❌ QA model loading failed: {fallback_error}")
-                    return False
+                logger.error(f"❌ QA model loading failed: {primary_error}")
+                return False
                 
         elif model_type == "sentiment":
             try:
-                models_cache[model_type] = pipeline(
-                    "sentiment-analysis",
-                    model=best_model,
-                    device=0 if device == "cuda" else -1,
-                )
-                logger.info(f"✅ Loaded RoBERTa for sentiment")
+                sentiment_model = None
+                for candidate in model_candidates:
+                    try:
+                        sentiment_model = pipeline(
+                            "sentiment-analysis",
+                            model=candidate,
+                            device=0 if device == "cuda" else -1,
+                        )
+                        logger.info(f"✅ Loaded sentiment model: {candidate}")
+                        break
+                    except Exception as candidate_error:
+                        logger.warning(f"⚠️  Sentiment candidate failed: {candidate_error}")
+                        sentiment_model = None
+                if sentiment_model is None:
+                    raise RuntimeError("No sentiment model could be loaded")
+                models_cache[model_type] = sentiment_model
                 return True
-            except Exception as primary_error:
-                logger.warning(f"⚠️  Primary sentiment model failed: {primary_error}")
-                try:
-                    models_cache[model_type] = pipeline(
-                        "sentiment-analysis",
-                        model=fallback_model,
-                        device=0 if device == "cuda" else -1,
-                    )
-                    logger.info(f"✅ Loaded fallback sentiment model")
-                    return True
-                except Exception as fallback_error:
-                    logger.error(f"❌ Sentiment model loading failed: {fallback_error}")
-                    return False
+            except Exception as fallback_error:
+                logger.error(f"❌ Sentiment model loading failed: {fallback_error}")
+                return False
                 
     except Exception as e:
         logger.error(f"❌ Error loading {model_type} model: {e}")
