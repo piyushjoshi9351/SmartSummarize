@@ -246,6 +246,15 @@ export default function ComparePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="relative space-y-8 pt-8">
+            {typeof comparisonResult.similarityScore === "number" && (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                <h3 className="font-semibold text-lg mb-1">Similarity Score</h3>
+                <p className="text-2xl font-bold text-primary">
+                  {(comparisonResult.similarityScore * 100).toFixed(1)}%
+                </p>
+              </div>
+            )}
+
             <div>
               <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-green-500">
                 <CheckCircle2 className="h-5 w-5" />
@@ -258,6 +267,41 @@ export default function ComparePage() {
               </ul>
             </div>
             <Separator />
+            {comparisonResult.similarSections && comparisonResult.similarSections.length > 0 && (
+              <>
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Most Similar Sections</h3>
+                  <div className="space-y-3">
+                    {comparisonResult.similarSections.map((item, index) => (
+                      <div key={`similar-sec-${index}`} className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground mb-1">Match {(item.score * 100).toFixed(1)}%</p>
+                        <p className="text-sm"><span className="font-medium">Doc 1:</span> {item.doc1}</p>
+                        <p className="text-sm mt-1"><span className="font-medium">Doc 2:</span> {item.doc2}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <Separator />
+              </>
+            )}
+
+            {comparisonResult.differentSections && comparisonResult.differentSections.length > 0 && (
+              <>
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Most Different Sections</h3>
+                  <div className="space-y-3">
+                    {comparisonResult.differentSections.map((item, index) => (
+                      <div key={`different-sec-${index}`} className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground mb-1">Similarity {(item.score * 100).toFixed(1)}%</p>
+                        <p className="text-sm"><span className="font-medium">Doc 1:</span> {item.doc1}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <Separator />
+              </>
+            )}
+
             <div>
               <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-yellow-500">
                 <XCircle className="h-5 w-5" />

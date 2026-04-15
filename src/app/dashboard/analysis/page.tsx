@@ -137,9 +137,9 @@ export default function AnalysisPage() {
     <div className="space-y-12">
       <div className="space-y-3 animate-in fade-in slide-in-from-top duration-500">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Tone & Style Analysis
+          Smart Document Analysis
         </h1>
-        <p className="text-muted-foreground text-base max-w-2xl">See sentiment and writing style quickly.</p>
+        <p className="text-muted-foreground text-base max-w-2xl">Get topics, points, insights, conclusions, and recommendations.</p>
       </div>
 
       <Card className="border-primary/20 bg-card/80 shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom duration-500">
@@ -208,6 +208,12 @@ export default function AnalysisPage() {
             <CardTitle>Analysis Results</CardTitle>
           </CardHeader>
           <CardContent className="relative space-y-6">
+            {analysisResult.analysisSource && (
+              <div>
+                <Badge variant="outline">Source: {analysisResult.analysisSource}</Badge>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card
                 className={
@@ -254,6 +260,104 @@ export default function AnalysisPage() {
             <div>
               <h3 className="font-semibold text-lg mb-2">Analysis Summary</h3>
               <p className="text-muted-foreground">{analysisResult.summary}</p>
+            </div>
+
+            {analysisResult.simpleExplanation && (
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Simple Explanation</h3>
+                <p className="text-muted-foreground">{analysisResult.simpleExplanation}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Key Topics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                    {analysisResult.keyTopics.map((item, index) => (
+                      <li key={`topic-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Important Points</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                    {analysisResult.importantPoints.map((item, index) => (
+                      <li key={`point-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Insights</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                    {analysisResult.insights.map((item, index) => (
+                      <li key={`insight-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Conclusions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                    {analysisResult.conclusions.map((item, index) => (
+                      <li key={`conclusion-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Risks / Recommendations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {analysisResult.risksOrRecommendations.map((item, index) => (
+                    <li key={`risk-${index}`}>{item}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Interview Questions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                    {analysisResult.interviewQuestions.map((item, index) => (
+                      <li key={`question-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Highlighted Lines</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                    {analysisResult.highlightedLines.map((item, index) => (
+                      <li key={`highlight-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
           </CardContent>
         </Card>

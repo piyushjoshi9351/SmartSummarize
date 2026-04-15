@@ -30,6 +30,26 @@ const AnalyzeDocumentToneOutputSchema = z.object({
   summary: z
     .string()
     .describe('A brief one-paragraph summary of the tone and style analysis.'),
+  keyTopics: z.array(z.string()).describe('Main topics extracted from the document.'),
+  importantPoints: z.array(z.string()).describe('Important points from the document.'),
+  insights: z.array(z.string()).describe('Actionable or strategic insights from the document.'),
+  conclusions: z.array(z.string()).describe('Core conclusions drawn from the document.'),
+  risksOrRecommendations: z
+    .array(z.string())
+    .describe('Risks identified and/or recommendations inferred from the content.'),
+  simpleExplanation: z
+    .string()
+    .describe('Simple-language explanation of the document for non-technical users.'),
+  interviewQuestions: z
+    .array(z.string())
+    .describe('Potential interview or discussion questions based on document content.'),
+  highlightedLines: z
+    .array(z.string())
+    .describe('Notable lines or snippets worth attention.'),
+  analysisSource: z
+    .string()
+    .optional()
+    .describe('Source used to generate structured analysis (hf_api or heuristic).'),
 });
 export type AnalyzeDocumentToneOutput = z.infer<typeof AnalyzeDocumentToneOutputSchema>;
 
@@ -46,6 +66,14 @@ const prompt = ai.definePrompt({
   3.  **Writing Style:** The primary writing style (e.g., Academic, Narrative, Persuasive, Technical, Expository).
   4.  **Emoji:** A single emoji that best represents the overall feeling of the text.
   5.  **Summary:** A concise, one-paragraph summary explaining your analysis of the document's tone and style.
+  6.  **Key Topics:** 3-6 key topics.
+  7.  **Important Points:** 3-6 important points.
+  8.  **Insights:** 3-6 practical insights.
+  9.  **Conclusions:** 2-4 final conclusions.
+  10. **Risks or Recommendations:** 3-5 bullets.
+  11. **Simple Explanation:** Explain the document in simple words.
+  12. **Interview Questions:** 3-5 possible interview/discussion questions.
+  13. **Highlighted Lines:** 3-5 notable lines.
 
   Your response MUST be a single, valid JSON object that conforms to the output schema. Do not include any other text, markdown, or explanations outside of the JSON object.
 
@@ -128,7 +156,7 @@ function getSentimentEmoji(sentiment: string): string {
 async function analyzeWithLocal(
   input: AnalyzeDocumentToneInput
 ): Promise<AnalyzeDocumentToneOutput> {
-  const response = await fetch(`${NLP_SERVER_URL}/api/tone`, {
+  const response = await fetch(`${NLP_SERVER_URL}/api/analyze`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({text: input.documentText}),
@@ -141,12 +169,12 @@ async function analyzeWithLocal(
 
   const data = await response.json();
   if (!data.success) {
-    throw new Error(data.error || 'Tone analysis failed');
+    throw new Error(data.error || 'Document analysis failed');
   }
 
   const sentiment = data.sentiment || 'Neutral';
-  const tones = determineTones(input.documentText);
-  const writingStyle = determineWritingStyle(input.documentText);
+  const tones = Array.isArray(data.tones) ? data.tones : determineTones(input.documentText);
+  const writingStyle = data.writingStyle || determineWritingStyle(input.documentText);
   const emoji = getSentimentEmoji(sentiment);
 
   return {
@@ -154,9 +182,20 @@ async function analyzeWithLocal(
     tones,
     writingStyle,
     emoji,
-    summary: `${sentiment} tone. ${writingStyle.toLowerCase()}, with tones of ${tones
+    summary: data.summary || `${sentiment} tone. ${writingStyle.toLowerCase()}, with tones of ${tones
       .join(', ')
       .toLowerCase()}. The document conveys a ${sentiment.toLowerCase()} tone overall.`,
+    keyTopics: Array.isArray(data.keyTopics) ? data.keyTopics : [],
+    importantPoints: Array.isArray(data.importantPoints) ? data.importantPoints : [],
+    insights: Array.isArray(data.insights) ? data.insights : [],
+    conclusions: Array.isArray(data.conclusions) ? data.conclusions : [],
+    risksOrRecommendations: Array.isArray(data.risksOrRecommendations)
+      ? data.risksOrRecommendations
+      : [],
+    simpleExplanation: data.simpleExplanation || 'Simple explanation is not available.',
+    interviewQuestions: Array.isArray(data.interviewQuestions) ? data.interviewQuestions : [],
+    highlightedLines: Array.isArray(data.highlightedLines) ? data.highlightedLines : [],
+    analysisSource: data.analysis_source || undefined,
   };
 }
 
@@ -183,6 +222,15 @@ export async function analyzeDocumentTone(
       summary: `${sentiment} tone. ${writingStyle.toLowerCase()}, with tones of ${tones
         .join(', ')
         .toLowerCase()}. The document conveys a neutral tone overall.`,
+      keyTopics: [],
+      importantPoints: [],
+      insights: [],
+      conclusions: [],
+      risksOrRecommendations: [],
+      simpleExplanation: 'Simple explanation is not available.',
+      interviewQuestions: [],
+      highlightedLines: [],
+      analysisSource: 'heuristic',
     };
   }
 }

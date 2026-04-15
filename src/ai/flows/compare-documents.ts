@@ -12,7 +12,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {compareDocumentsLocal} from '@/ai/local-heuristics';
-import {shouldUseGeminiPrimary} from '@/ai/provider';
+import {shouldUseGeminiPrimary, NLP_SERVER_URL} from '@/ai/provider';
 
 const CompareDocumentsInputSchema = z.object({
   documentOneText: z.string().describe('The text content of the first document.'),
@@ -26,12 +26,30 @@ const CompareDocumentsOutputSchema = z.object({
   similarities: z.array(z.string()).describe("A list of key similarities between the two documents."),
   differences: z.array(z.string()).describe("A list of key differences between the two documents."),
   conclusion: z.string().describe("A brief concluding summary of the comparison."),
+  similarityScore: z.number().min(0).max(1).describe('Overall similarity score from 0 to 1.').optional(),
+  similarSections: z
+    .array(
+      z.object({
+        score: z.number(),
+        doc1: z.string(),
+        doc2: z.string(),
+      })
+    )
+    .optional(),
+  differentSections: z
+    .array(
+      z.object({
+        score: z.number(),
+        doc1: z.string(),
+      })
+    )
+    .optional(),
 });
 export type CompareDocumentsOutput = z.infer<typeof CompareDocumentsOutputSchema>;
 
 async function compareDocumentsViaAPI(input: CompareDocumentsInput): Promise<CompareDocumentsOutput> {
   try {
-    const response = await fetch('http://localhost:5000/api/compare-documents', {
+    const response = await fetch(`${NLP_SERVER_URL}/api/compare-documents`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -57,6 +75,10 @@ async function compareDocumentsViaAPI(input: CompareDocumentsInput): Promise<Com
       similarities: data.similarities || [],
       differences: data.differences || [],
       conclusion: data.conclusion || "Comparison could not be completed.",
+      similarityScore:
+        typeof data.similarity_score === 'number' ? data.similarity_score : undefined,
+      similarSections: Array.isArray(data.similar_sections) ? data.similar_sections : [],
+      differentSections: Array.isArray(data.different_sections) ? data.different_sections : [],
     };
   } catch (error) {
     console.warn(`⚠️  Comparison API error: ${error}, using fallback`);

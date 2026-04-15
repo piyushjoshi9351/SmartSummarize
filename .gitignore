@@ -43,3 +43,9 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# local NLP/model artifacts
+models_cache/
+nlp/__pycache__/
+studio/nlp/models/
+main

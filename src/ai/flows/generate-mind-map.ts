@@ -12,7 +12,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {buildMindMap} from '@/ai/local-heuristics';
-import {shouldUseGeminiPrimary} from '@/ai/provider';
+import {NLP_SERVER_URL, shouldUseGeminiPrimary} from '@/ai/provider';
 
 // Define the interface for the recursive type
 export interface MindMapNode {
@@ -37,7 +37,7 @@ export type GenerateMindMapInput = z.infer<typeof GenerateMindMapInputSchema>;
 
 async function generateMindMapLocal(input: GenerateMindMapInput): Promise<MindMapNode> {
   try {
-    const response = await fetch('http://localhost:5000/api/mind-map', {
+    const response = await fetch(`${NLP_SERVER_URL}/api/mind-map`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({text: input.documentText}),
