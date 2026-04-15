@@ -14,7 +14,7 @@
 
 Required variables:
 ```
-GOOGLE_GENAI_API_KEY=AIzaSyBk-IoM0JRSTImjqdeFsmLs-73ynToXU0E
+GOOGLE_GENAI_API_KEY=YOUR_GOOGLE_GENAI_API_KEY
 ```
 
 Note: Firebase config is embedded in `src/firebase/config.ts` (safe for client-side)
@@ -100,7 +100,7 @@ git push origin main
 #### Step 3: Configure Environment
 On Vercel deployment screen, add:
 - Name: `GOOGLE_GENAI_API_KEY`
-- Value: `AIzaSyBk-IoM0JRSTImjqdeFsmLs-73ynToXU0E`
+- Value: `YOUR_GOOGLE_GENAI_API_KEY`
 
 #### Step 4: Deploy
 Click "Deploy" button → Wait 2-3 minutes → ✅ Live!
@@ -126,7 +126,7 @@ Click "Deploy" button → Wait 2-3 minutes → ✅ Live!
 #### Step 3: Set Environment Variables
 In Firebase Console → App Hosting → Environment:
 ```
-GOOGLE_GENAI_API_KEY=AIzaSyBk-IoM0JRSTImjqdeFsmLs-73ynToXU0E
+GOOGLE_GENAI_API_KEY=YOUR_GOOGLE_GENAI_API_KEY
 ```
 
 #### Step 4: Deploy
@@ -150,7 +150,7 @@ gcloud run deploy app \
   --image gcr.io/studio-7451770885-57a11/app \
   --region us-central1 \
   --allow-unauthenticated \
-  --set-env-vars GOOGLE_GENAI_API_KEY=AIzaSyBk-IoM0JRSTImjqdeFsmLs-73ynToXU0E
+   --set-env-vars GOOGLE_GENAI_API_KEY=YOUR_GOOGLE_GENAI_API_KEY
 ```
 
 ---

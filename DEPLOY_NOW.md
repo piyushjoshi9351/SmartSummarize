@@ -19,7 +19,7 @@ git push origin main
 ### Step 3: Add Environment Variable (30 seconds)
 In the deployment screen:
 - Add variable: `GOOGLE_GENAI_API_KEY`
-- Value: `AIzaSyBk-IoM0JRSTImjqdeFsmLs-73ynToXU0E`
+- Value: `YOUR_GOOGLE_GENAI_API_KEY`
 - Click **"Add"**
 
 ### Step 4: Deploy (30 seconds)
@@ -64,7 +64,7 @@ In the deployment screen:
 | Item | Value |
 |------|-------|
 | **App URL** | Will be given by Vercel after deploy |
-| **API Key** | `AIzaSyBk-IoM0JRSTImjqdeFsmLs-73ynToXU0E` |
+| **API Key** | `YOUR_GOOGLE_GENAI_API_KEY` |
 | **Firebase** | `studio-7451770885-57a11` |
 | **Database** | Firestore (auto-created) |
 | **Auth** | Email/Password (Firebase) |

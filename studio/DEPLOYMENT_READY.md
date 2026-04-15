@@ -119,7 +119,7 @@ git push origin main
 # - Click "Add New" → "Project"
 # - Select "piyushjoshi9351/studio"
 # - Add Environment Variable:
-#   GOOGLE_GENAI_API_KEY=AIzaSyBk-IoM0JRSTImjqdeFsmLs-73ynToXU0E
+#   GOOGLE_GENAI_API_KEY=YOUR_GOOGLE_GENAI_API_KEY
 # - Click "Deploy"
 
 # Step 3: Done!
@@ -136,7 +136,7 @@ git push origin main
 #    - Select "main" branch
 
 # 2. Add Environment Variables
-#    GOOGLE_GENAI_API_KEY=AIzaSyBk-IoM0JRSTImjqdeFsmLs-73ynToXU0E
+#    GOOGLE_GENAI_API_KEY=YOUR_GOOGLE_GENAI_API_KEY
 
 # 3. Click "Deploy"
 # Your app will be live at: https://studio-[projectid].firebaseapp.com
