@@ -8,7 +8,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {naiveAnswer} from '@/ai/local-heuristics';
-import {canUseGeminiFor, NLP_SERVER_URL} from '@/ai/provider';
+import {canUseGeminiFor, canUseLocalFor, NLP_SERVER_URL} from '@/ai/provider';
 
 const ChatWithDocumentInputSchema = z.object({
   documentText: z.string().describe('The extracted text content of the document.'),
@@ -84,6 +84,10 @@ export async function chatWithDocument(
   input: ChatWithDocumentInput
 ): Promise<ChatWithDocumentOutput> {
   try {
+    if (!canUseLocalFor('chat')) {
+      throw new Error('Local NLP server is not configured.');
+    }
+
     return await chatWithLocal(input);
   } catch (error) {
     if (canUseGeminiFor('chat')) {

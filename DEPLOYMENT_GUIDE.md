@@ -14,10 +14,14 @@
 
 Required variables:
 ```
+AI_PROVIDER=gemini
 GOOGLE_GENAI_API_KEY=YOUR_GOOGLE_GENAI_API_KEY
+NEXT_PUBLIC_FIREBASE_API_KEY=YOUR_FIREBASE_WEB_API_KEY
 ```
 
-Note: Firebase config is embedded in `src/firebase/config.ts` (safe for client-side)
+Notes:
+- `AI_PROVIDER=gemini` is recommended on Vercel because local NLP server endpoints are not hosted there by default.
+- Add your Vercel domain in Firebase Console -> Authentication -> Settings -> Authorized domains.
 
 ### 3. **Database Setup** ✅
 
@@ -99,8 +103,12 @@ git push origin main
 
 #### Step 3: Configure Environment
 On Vercel deployment screen, add:
+- Name: `AI_PROVIDER`
+- Value: `gemini`
 - Name: `GOOGLE_GENAI_API_KEY`
 - Value: `YOUR_GOOGLE_GENAI_API_KEY`
+- Name: `NEXT_PUBLIC_FIREBASE_API_KEY`
+- Value: `YOUR_FIREBASE_WEB_API_KEY`
 
 #### Step 4: Deploy
 Click "Deploy" button → Wait 2-3 minutes → ✅ Live!

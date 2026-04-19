@@ -7,7 +7,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {canUseGeminiFor, NLP_SERVER_URL} from '@/ai/provider';
+import {canUseGeminiFor, canUseLocalFor, NLP_SERVER_URL} from '@/ai/provider';
 
 const AnalyzeDocumentToneInputSchema = z.object({
   documentText: z.string().describe('The text content of the document to analyze.'),
@@ -203,6 +203,10 @@ export async function analyzeDocumentTone(
   input: AnalyzeDocumentToneInput
 ): Promise<AnalyzeDocumentToneOutput> {
   try {
+    if (!canUseLocalFor('tone')) {
+      throw new Error('Local NLP server is not configured.');
+    }
+
     return await analyzeWithLocal(input);
   } catch (error) {
     if (canUseGeminiFor('tone')) {

@@ -10,9 +10,10 @@ import {z} from 'genkit';
 import {naiveSummaryBullets} from '@/ai/local-heuristics';
 import {
   canUseGeminiFor,
-  getAiProvider,
+  canUseLocalFor,
   isGeminiEnabled,
   NLP_SERVER_URL,
+  shouldUseGeminiPrimary,
 } from '@/ai/provider';
 
 const GenerateAudienceSpecificSummaryInputSchema = z.object({
@@ -269,14 +270,17 @@ async function summarizeWithLocal(
 export async function generateAudienceSpecificSummary(
   input: GenerateAudienceSpecificSummaryInput
 ): Promise<GenerateAudienceSpecificSummaryOutput> {
-  const provider = getAiProvider();
-  const shouldPreferGemini = provider !== 'local';
+  const shouldPreferGemini = shouldUseGeminiPrimary('summary');
 
   if (shouldPreferGemini && isGeminiEnabled()) {
     return generateAudienceSpecificSummaryFlow(input);
   }
 
   try {
+    if (!canUseLocalFor('summary')) {
+      throw new Error('Local NLP server is not configured.');
+    }
+
     return await summarizeWithLocal(input);
   } catch (error) {
     if (canUseGeminiFor('summary')) {

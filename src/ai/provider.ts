@@ -8,7 +8,9 @@ export type AiFeature =
   | 'compare'
   | 'audio';
 
-const rawProvider = (process.env.AI_PROVIDER || 'hybrid').toLowerCase();
+const isServerlessRuntime = Boolean(process.env.VERCEL);
+const defaultProvider = isServerlessRuntime ? 'gemini' : 'hybrid';
+const rawProvider = (process.env.AI_PROVIDER || defaultProvider).toLowerCase();
 
 const provider: AiProviderMode =
   rawProvider === 'local' || rawProvider === 'gemini' || rawProvider === 'hybrid'
@@ -18,7 +20,9 @@ const provider: AiProviderMode =
 export const GEMINI_API_KEY =
   process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || '';
 export const GEMINI_ENABLED = GEMINI_API_KEY.trim().length > 0;
-export const NLP_SERVER_URL = process.env.NLP_SERVER_URL || 'http://localhost:5000';
+export const NLP_SERVER_URL =
+  process.env.NLP_SERVER_URL || (isServerlessRuntime ? '' : 'http://localhost:5000');
+export const LOCAL_NLP_ENABLED = NLP_SERVER_URL.trim().length > 0;
 
 export function getAiProvider(): AiProviderMode {
   return provider;
@@ -37,8 +41,8 @@ export function preferredProviderFor(feature: AiFeature): 'local' | 'gemini' {
     return 'local';
   }
 
-  // Hybrid mode: prefer local for everything except audio generation.
-  if (feature === 'audio') {
+  // Hybrid mode: local for summary/chat/tone, Gemini for advanced generation features.
+  if (feature === 'mindMap' || feature === 'suggestedQuestions' || feature === 'compare' || feature === 'audio') {
     return 'gemini';
   }
 
@@ -58,5 +62,5 @@ export function canUseGeminiFor(feature: AiFeature): boolean {
 }
 
 export function canUseLocalFor(feature: AiFeature): boolean {
-  return preferredProviderFor(feature) === 'local';
+  return LOCAL_NLP_ENABLED && preferredProviderFor(feature) === 'local';
 }
